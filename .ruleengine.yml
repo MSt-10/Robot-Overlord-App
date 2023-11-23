@@ -1,0 +1,4 @@
+repository: MSt-10/Robot-Overlord-App
+rules:
+  - MAVEN
+  - SPRING
