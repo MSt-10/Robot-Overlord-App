@@ -8,11 +8,11 @@ import java.util.prefs.PreferencesFactory;
 
 import org.jetbrains.annotations.NotNull;
 
-import com.marginallyclever.robotOverlord.Log;
+import com.marginallyclever.robotoverlord.Log;
 
 /**
  * @author Peter Colapietro
- * @see <a href="http://www.davidc.net/programming/java/java-preferences-using-file-backing-store">Java Preferences using a file as the backing store</a>
+ * See <a href="http://www.davidc.net/programming/java/java-preferences-using-file-backing-store">Java Preferences using a file as the backing store</a>
  * @since v7.1.4
  */
 public final class MarginallyCleverPreferencesFileFactory<A extends AbstractPreferences> implements PreferencesFactory {
@@ -47,7 +47,7 @@ public final class MarginallyCleverPreferencesFileFactory<A extends AbstractPref
 	@Override
 	public Preferences userRoot() {
 		if (rootPreferences == null) {
-			Log.message("Instantiating root preferences");
+			logger.info("Instantiating root preferences");
 			@SuppressWarnings("unchecked")
 			final A castedPreferences = (A) new MarginallyCleverPreferences(null, "");
 			rootPreferences = castedPreferences;
@@ -84,13 +84,13 @@ public final class MarginallyCleverPreferencesFileFactory<A extends AbstractPref
 			if (!preferencesFile.exists()) {
 				try {
 					if (preferencesFile.createNewFile()) {
-						Log.message("Preferences file was created.");
+						logger.info("Preferences file was created.");
 					}
 				} catch (IOException e) {
 					Log.error( e.getMessage() );
 				}
 			}
-			Log.message("Preferences file is "+ preferencesFile);
+			logger.info("Preferences file is "+ preferencesFile);
 		}
 		return preferencesFile;
 	}

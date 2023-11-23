@@ -1,36 +1,26 @@
 package com.marginallyclever.util;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import org.jetbrains.annotations.NotNull;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.*;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.Enumeration;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Set;
-import java.util.TreeMap;
+import java.util.*;
 import java.util.prefs.AbstractPreferences;
 import java.util.prefs.BackingStoreException;
 import java.util.prefs.Preferences;
-
-import org.jetbrains.annotations.NotNull;
-
-import com.marginallyclever.robotOverlord.Log;
 
 /**
  * Created on 6/7/15.
  *
  * @author Peter Colapietro
- * @see <a href="http://www.davidc.net/programming/java/java-preferences-using-file-backing-store">Java Preferences using a file as the backing store</a>
- * @see <a href="http://stackoverflow.com/a/25548386">SO answer to: How to synchronize file access in a Java servlet?</a>
+ * See <a href="http://www.davidc.net/programming/java/java-preferences-using-file-backing-store">Java Preferences using a file as the backing store</a>
+ * See <a href="http://stackoverflow.com/a/25548386">SO answer to: How to synchronize file access in a Java servlet?</a>
  * @since v7.1.4
  */
 public class MarginallyCleverPreferences extends AbstractPreferences implements Ancestryable {
+  private static final Logger logger = LoggerFactory.getLogger(MarginallyCleverPreferences.class);
 
   /**
    *
@@ -59,20 +49,20 @@ public class MarginallyCleverPreferences extends AbstractPreferences implements 
    * @param parent the parent of this preference node, or null if this
    *               is the root.
    * @param name   the name of this preference node, relative to its parent,
-   *               or <tt>""</tt> if this is the root.
-   * @throws IllegalArgumentException if <tt>name</tt> contains a slash
-   *                                  (<tt>'/'</tt>),  or <tt>parent</tt> is <tt>null</tt> and
-   *                                  name isn't <tt>""</tt>.
+   *               or <code>""</code> if this is the root.
+   * @throws IllegalArgumentException if <code>name</code> contains a slash
+   *                                  (<code>'/'</code>),  or <code>parent</code> is <code>null</code> and
+   *                                  name isn't <code>""</code>.
    */
   public MarginallyCleverPreferences(AbstractPreferences parent, String name) {
     super(parent, name);
-    Log.message("Instantiating node "+ name);
-    root = new TreeMap<>();
-    children = new TreeMap<>();
+    logger.info("Instantiating node "+ name);
+    root = new TreeMap<String, String>();
+    children = new TreeMap<String, Preferences>();
     try {
       sync();
     } catch (BackingStoreException e) {
-      Log.error("Unable to sync on creation of node "+name+". "+e);
+      logger.error("Unable to sync on creation of node "+name+". "+e);
     }
   }
 
@@ -82,7 +72,7 @@ public class MarginallyCleverPreferences extends AbstractPreferences implements 
     try {
       flush();
     } catch (BackingStoreException e) {
-    	Log.error("Unable to flush after putting "+key+". "+e);
+    	logger.error("Unable to flush after putting "+key+". "+e);
     }
   }
 
@@ -97,7 +87,7 @@ public class MarginallyCleverPreferences extends AbstractPreferences implements 
     try {
       flush();
     } catch (BackingStoreException e) {
-    	Log.error("Unable to flush after removing "+key+". "+e);
+    	logger.error("Unable to flush after removing "+key+". "+e);
     }
   }
 
@@ -111,18 +101,18 @@ public class MarginallyCleverPreferences extends AbstractPreferences implements 
   @Override
   protected String[] keysSpi() throws BackingStoreException {
     final Set<String> keySet = root.keySet();
-    return keySet.toArray(new String[keySet.size()]);
+    return keySet.toArray(new String[0]);
   }
 
   @NotNull
   @Override
   protected String[] childrenNamesSpi() throws BackingStoreException {
     final Set<String> childrenNames = children.keySet();
-    return childrenNames.toArray(new String[childrenNames.size()]);
+    return childrenNames.toArray(new String[0]);
   }
 
   /**
-   * http://stackoverflow.com/a/24249709
+   * see <a href="http://stackoverflow.com/a/24249709">stackoverflow</a>
    */
   @NotNull
   @Override
@@ -133,7 +123,7 @@ public class MarginallyCleverPreferences extends AbstractPreferences implements 
       try {
         isChildRemoved = getIsRemoved(childPreferenceNode);
       } catch (ReflectiveOperationException e) {
-        Log.error( e.getMessage() );
+        logger.error( e.getMessage() );
       }
     }
     if (childPreferenceNode == null || isChildRemoved) {
@@ -151,11 +141,11 @@ public class MarginallyCleverPreferences extends AbstractPreferences implements 
    * @throws ReflectiveOperationException
    */
   private boolean getIsRemoved(AbstractPreferences abstractPreference) throws ReflectiveOperationException {
-    Log.message( abstractPreference.toString() );
+    logger.info( abstractPreference.toString() );
     final Method declaredMethod = AbstractPreferences.class.getDeclaredMethod("isRemoved");
     declaredMethod.setAccessible(true);
     Object isRemoved = declaredMethod.invoke(abstractPreference, new Object[]{null});
-    return (boolean) isRemoved;
+    return (Boolean) isRemoved;
   }
 
   @Override
@@ -210,7 +200,7 @@ public class MarginallyCleverPreferences extends AbstractPreferences implements 
             p.load(fileInputStream);
           }
 
-          final List<String> toRemove = new ArrayList<>();
+          final List<String> toRemove = new ArrayList<String>();
 
           // Make a list of all direct children of this node to be removed
           final Enumeration<?> pnen = p.propertyNames();
@@ -292,12 +282,12 @@ public class MarginallyCleverPreferences extends AbstractPreferences implements 
 
   @Override
   public Map<String, Preferences> getChildren() {
-    return new TreeMap<>(children);
+    return new TreeMap<String, Preferences>(children);
   }
 
   @Override
   public Map<String, String> getRoot() {
-    return new TreeMap<>(root);
+    return new TreeMap<String, String>(root);
   }
 
 }

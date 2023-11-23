@@ -20,14 +20,14 @@ import java.util.prefs.Preferences;
 
 import org.jetbrains.annotations.NotNull;
 
-import com.marginallyclever.robotOverlord.Log;
+import com.marginallyclever.robotoverlord.Log;
 
 /**
  * Created on 6/7/15.
  *
  * @author Peter Colapietro
- * @see <a href="http://www.davidc.net/programming/java/java-preferences-using-file-backing-store">Java Preferences using a file as the backing store</a>
- * @see <a href="http://stackoverflow.com/a/25548386">SO answer to: How to synchronize file access in a Java servlet?</a>
+ * See <a href="http://www.davidc.net/programming/java/java-preferences-using-file-backing-store">Java Preferences using a file as the backing store</a>
+ * See <a href="http://stackoverflow.com/a/25548386">SO answer to: How to synchronize file access in a Java servlet?</a>
  * @since v7.1.4
  */
 public class MarginallyCleverPreferences extends AbstractPreferences implements Ancestryable {
@@ -66,7 +66,7 @@ public class MarginallyCleverPreferences extends AbstractPreferences implements 
    */
   public MarginallyCleverPreferences(AbstractPreferences parent, String name) {
     super(parent, name);
-    Log.message("Instantiating node "+ name);
+    logger.info("Instantiating node "+ name);
     root = new TreeMap<>();
     children = new TreeMap<>();
     try {
@@ -155,7 +155,7 @@ public class MarginallyCleverPreferences extends AbstractPreferences implements 
    * @throws ReflectiveOperationException
    */
   private boolean getIsRemoved(AbstractPreferences abstractPreference) throws ReflectiveOperationException {
-    Log.message( abstractPreference.toString() );
+    logger.info( abstractPreference.toString() );
     final Method declaredMethod = AbstractPreferences.class.getDeclaredMethod("isRemoved");
     declaredMethod.setAccessible(true);
     Object isRemoved = declaredMethod.invoke(abstractPreference, new Object[]{null});

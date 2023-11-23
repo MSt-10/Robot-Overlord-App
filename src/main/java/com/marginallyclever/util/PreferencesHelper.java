@@ -1,13 +1,11 @@
 package com.marginallyclever.util;
 
-import static com.marginallyclever.util.PreferencesHelper.MakelangeloPreferenceKey.GRAPHICS;
-import static com.marginallyclever.util.PreferencesHelper.MakelangeloPreferenceKey.LANGUAGE;
-import static com.marginallyclever.util.PreferencesHelper.MakelangeloPreferenceKey.LEGACY_MAKELANGELO_ROOT;
-import static com.marginallyclever.util.PreferencesHelper.MakelangeloPreferenceKey.MACHINES;
+import org.json.JSONObject;
+import org.json.Property;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
+import java.io.*;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -16,17 +14,18 @@ import java.util.prefs.AbstractPreferences;
 import java.util.prefs.BackingStoreException;
 import java.util.prefs.Preferences;
 
-import org.json.JSONObject;
-import org.json.Property;
-
-import com.marginallyclever.robotOverlord.Log;
+import static com.marginallyclever.util.PreferencesHelper.MakelangeloPreferenceKey.*;
 
 /**
  * Helper class to be used when accessing preferences.
  * @author Peter Colapietro
  * @since v7.1.4
  */
-public final class PreferencesHelper {
+public final class PreferencesHelper implements Serializable {
+	private static final Logger logger = LoggerFactory.getLogger(PreferencesHelper.class);
+
+	@Serial
+	private static final long serialVersionUID = 1L;
 
 	/**
 	 * Internal mapping of all Makelangelo preference nodes.
@@ -54,7 +53,7 @@ public final class PreferencesHelper {
 	/**
 	 * Machine preference node path, used to store things such as paper height and width, invert left and right motors,
 	 * etc.
-	 * @see com.marginallyclever.makelangeloRobot.settings.MakelangeloRobotSettings
+	 * See com.marginallyclever.makelangeloRobot.settings.MakelangeloRobotSettings
 	 */
 	private static final String MACHINES_PATH_NAME = "Machines";
 
@@ -66,19 +65,19 @@ public final class PreferencesHelper {
 	/**
 	 * Initializes {@link CLASS_TO_PREFERENCE_NODE_MAP}.
 	 *
-	 * @see <a href="http://stackoverflow.com/a/507658">How can I Initialize a static Map?</a>
+	 * See <a href="http://stackoverflow.com/a/507658">How can I Initialize a static Map?</a>
 	 */
 	static {
-		final Map<MakelangeloPreferenceKey, ? super Preferences> initialMap = new HashMap<>();
+		final Map<MakelangeloPreferenceKey, ? super Preferences> initialMap = new HashMap<MakelangeloPreferenceKey, Preferences>();
 		final Preferences userRootPreferencesNode = MarginallyCleverPreferences.userRoot();
-		//FIXME write unit test/tool to view import/export machine configurations.
+		//FIXME write unit test/tool to componentpanel import/export machine configurations.
 		//final Preferences makelangeloPreferenceNode = userRootPreferencesNode.node(MAKELANGELO_ROOT_PATH_NAME);
 		//new MarginallyCleverPreferences((AbstractPreferences) userRootPreferencesNode.node(thisPackageName), userRootPreferencesNode.node(thisPackageName).name()); 
 		final Preferences legacyMakelangeloPreferenceNode = userRootPreferencesNode.node(LEGACY_MAKELANGELO_ROOT_PATH_NAME);//new MarginallyCleverPreferences((AbstractPreferences) userRootPreferencesNode.node(LEGACY_MAKELANGELO_ROOT_PATH_NAME), userRootPreferencesNode.node(LEGACY_MAKELANGELO_ROOT_PATH_NAME).name());
 		try {
 			legacyMakelangeloPreferenceNode.sync();
 		} catch (BackingStoreException e) {
-			Log.error(e.getMessage());
+			logger.error(e.getMessage());
 		}
 		//initialMap.put(MAKELANGELO_ROOT, makelangeloPreferenceNode);
 		initialMap.put(LEGACY_MAKELANGELO_ROOT, legacyMakelangeloPreferenceNode);
@@ -111,7 +110,7 @@ public final class PreferencesHelper {
 
 	/**
 	 * Enumeration used when getting a specific preference node.
-	 * @see #getPreferenceNode(MakelangeloPreferenceKey)
+	 * See #getPreferenceNode(MakelangeloPreferenceKey)
 	 */
 	public enum MakelangeloPreferenceKey {
 		GRAPHICS,
@@ -129,7 +128,7 @@ public final class PreferencesHelper {
 	 */
 	public static <P extends Preferences> void logPreferenceNode(P preferenceNode) {
 		try {
-			Log.message("node name:"+preferenceNode);
+			logger.info("node name:"+preferenceNode);
 			logKeyValuesForPreferenceNode(preferenceNode);
 			final String[] childrenPreferenceNodeNames = preferenceNode.childrenNames();
 			for (String childNodeName : childrenPreferenceNodeNames) {
@@ -137,7 +136,7 @@ public final class PreferencesHelper {
 				logPreferenceNode(childNode);
 			}
 		} catch (BackingStoreException e) {
-			Log.error(e.getMessage());
+			logger.error(e.getMessage());
 		}
 	}
 
@@ -150,7 +149,7 @@ public final class PreferencesHelper {
 	public static <P extends Preferences> void logKeyValuesForPreferenceNode(P preferenceNode) throws BackingStoreException {
 		final String[] keys = preferenceNode.keys();
 		for (String key : keys) {
-			Log.message("key:"+key+" value:"+ preferenceNode.get(key, null));
+			logger.info("key:"+key+" value:"+ preferenceNode.get(key, null));
 		}
 	}
 
@@ -173,7 +172,7 @@ public final class PreferencesHelper {
 				copyPreferenceNode(sourcePreferenceNode.node(childName), destinationChildNode);
 			}
 		} catch (BackingStoreException e) {
-			Log.error(e.getMessage());
+			logger.error(e.getMessage());
 		}
 	}
 
@@ -184,7 +183,7 @@ public final class PreferencesHelper {
 	 * @param <P> an extension of Preferences
 	 * @param preferenceNode Preference node that you want recursively cleared of all key value pairs.
 	 * @throws BackingStoreException on failure to store
-	 * @see <a href="http://stackoverflow.com/a/6411855"></a>
+	 * See <a href="http://stackoverflow.com/a/6411855"></a>
 	 */
 	private static <P extends Preferences> void clearAll(P preferenceNode) throws BackingStoreException {
 		final String[] childrenNames = preferenceNode.childrenNames();
@@ -212,7 +211,7 @@ public final class PreferencesHelper {
 		try {
 			preferenceNode.clear();
 		} catch (BackingStoreException e) {
-			Log.error(e.getMessage());
+			logger.error(e.getMessage());
 		}
 	}
 
@@ -230,7 +229,7 @@ public final class PreferencesHelper {
 				childNode.clear();
 			}
 		} catch (BackingStoreException e) {
-			Log.error(e.getMessage());
+			logger.error(e.getMessage());
 		}
 	}
 
@@ -249,7 +248,7 @@ public final class PreferencesHelper {
 		try {
 			PreferencesHelper.clearAll(destinationPreferenceNode);
 		} catch (BackingStoreException e) {
-			Log.error(e.getMessage());
+			logger.error(e.getMessage());
 		}
 		PreferencesHelper.copyPreferenceNode(sourcePreferenceNode, destinationPreferenceNode);
 		final File preferencesFile = MarginallyCleverPreferencesFileFactory.getPropertiesPreferencesFile();
@@ -257,7 +256,7 @@ public final class PreferencesHelper {
 		try (final FileInputStream inStream = new FileInputStream(preferencesFile)) {
 			p.load(inStream);
 		} catch (IOException e) {
-			Log.error(e.getMessage());
+			logger.error(e.getMessage());
 		}
 		logPropertiesNode(p);
 		logAncestryable(destinationPreferenceNode);
@@ -268,16 +267,15 @@ public final class PreferencesHelper {
 	 */
 	public static void logAncestryable(Ancestryable preferenceNode) {
 		final JSONObject object = new JSONObject(preferenceNode.getChildren());
-		Log.message( object.toString());
+		logger.info( object.toString());
 	}
 
 	/**
-	 * @param <P> an extension of Preferences
 	 * @param properties Properties to be logged.
 	 */
 	public static <P extends Properties> void logPropertiesNode(P properties) {
+		
 		final JSONObject jsonObject = Property.toJSONObject(properties);
-		Log.message( jsonObject.toString());
+		logger.info( jsonObject.toString());
 	}
-
 }

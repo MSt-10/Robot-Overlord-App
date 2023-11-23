@@ -1,12 +1,17 @@
 package com.marginallyclever.util;
 
-import static com.marginallyclever.robotOverlord.Translator.WORKING_DIRECTORY;
+import com.marginallyclever.robotoverlord.swing.translator.Translator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.w3c.dom.Document;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.ObjectOutputStream;
-import java.io.OutputStream;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import java.io.*;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -15,23 +20,13 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-
-import org.w3c.dom.Document;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-import org.xml.sax.SAXException;
-
-import com.marginallyclever.robotOverlord.Log;
-
 /**
  * Helper utility class to aid in loading of language files.
  * @author Peter Colapietro
  * @since v7.1.4
  */
 public final class MarginallyCleverTranslationXmlFileHelper {
+  private static final Logger logger = LoggerFactory.getLogger(MarginallyCleverTranslationXmlFileHelper.class);
 
   /**
    * NOOP Constructor
@@ -63,13 +58,13 @@ public final class MarginallyCleverTranslationXmlFileHelper {
 
   /**
    * Used when writing a set to disk.
-   * @see #writeSetObjectToFile
+   * See #writeSetObjectToFile
    */
   private static final String SET_OBJECT_FILE_NAME = "keys.txt";
 
   /**
    * @param args command line arguments.
-   * @see <a href="http://stackoverflow.com/a/14026865">Comparing key and values of two java maps</a>
+   * See <a href="http://stackoverflow.com/a/14026865">Comparing key and values of two java maps</a>
    */
   public static void main(String[] args) {
     areLanguageFilesMissingKeys(DO_NOT_LOG_MISSING_KEYS, CHECK_ALL_LANGUAGE_FILES);
@@ -98,7 +93,7 @@ public final class MarginallyCleverTranslationXmlFileHelper {
           final String languageFileName = languageFile.getName();
           final boolean isDefaultLanguageFile = languageFileName.equals(DEFAULT_LANGUAGE_XML_FILE);
           if (!isDefaultLanguageFile) {
-            Log.message(languageFile.getAbsolutePath());
+            logger.info(languageFile.getAbsolutePath());
             final Document parseXmlLanguageDocument = docBuilder.parse(languageFile);
             final Set<String> thisLanguageFilesKeys = getKeySet(parseXmlLanguageDocument.getDocumentElement());
 
@@ -118,7 +113,7 @@ public final class MarginallyCleverTranslationXmlFileHelper {
           return true;
         }
       } catch (SAXException | IOException | URISyntaxException | ParserConfigurationException e) {
-        Log.error( e.getMessage() );
+        logger.error( e.getMessage() );
       }
     }
     return false;
@@ -131,7 +126,7 @@ public final class MarginallyCleverTranslationXmlFileHelper {
    */
   private static void logMissingKeys(Set<String> expected, Set<String> actual) {
     final Set<String> inANotB = getMissingKeys(expected, actual);
-    Log.error("Missing Keys: " + inANotB.toString());
+    logger.error("Missing Keys: " + inANotB.toString());
   }
 
   /**
@@ -139,18 +134,18 @@ public final class MarginallyCleverTranslationXmlFileHelper {
    * @param expected set of expected keys
    * @param actual set of actual keys
    * @return
-   * @see <a href="http://stackoverflow.com/a/14026865">Comparing key and values of two java maps</a>
+   * See <a href="http://stackoverflow.com/a/14026865">Comparing key and values of two java maps</a>
    */
   private static Set<String> getMissingKeys(Set<String> expected, Set<String> actual) {
-    final Set<String> keysInA = new HashSet<>(expected);
-    final Set<String> keysInB = new HashSet<>(actual);
+    final Set<String> keysInA = new HashSet<String>(expected);
+    final Set<String> keysInB = new HashSet<String>(actual);
 
     // Keys in A and not in B
-    final Set<String> inANotB = new HashSet<>(keysInA);
+    final Set<String> inANotB = new HashSet<String>(keysInA);
     inANotB.removeAll(keysInB);
 
     // Keys common to both maps
-    final Set<String> commonKeys = new HashSet<>(keysInA);
+    final Set<String> commonKeys = new HashSet<String>(keysInA);
     commonKeys.retainAll(keysInB);
     return inANotB;
   }
@@ -159,7 +154,7 @@ public final class MarginallyCleverTranslationXmlFileHelper {
    * Write a set object to disk.
    * @param set Set you want written to disk.
    * @throws IOException
-   * @see #SET_OBJECT_FILE_NAME
+   * See #SET_OBJECT_FILE_NAME
    */
   @SuppressWarnings("unused")
   private static void writeSetObjectToFile(Set<String> set) throws IOException {
@@ -174,7 +169,7 @@ public final class MarginallyCleverTranslationXmlFileHelper {
    * @param languagesFolderUrl language folder.
    * @param languageFiles list of all language files to check for existence of the default
    * @return file object representing the default language file.
-   * @see #DEFAULT_LANGUAGE_XML_FILE
+   * See #DEFAULT_LANGUAGE_XML_FILE
    * @throws AssertionError
    */
   private static File searchForDefaultLanguageInLanguagesFolder(URL languagesFolderUrl, File[] languageFiles) throws AssertionError {
@@ -188,17 +183,17 @@ public final class MarginallyCleverTranslationXmlFileHelper {
 
   /**
    * @return url object representing the languages folder
-   * @see #getLanguagesFolderUrlRelativeToClasspath()
-   * @see #getLanguagesFolderUrlFromUserDirectory()
+   * See #getLanguagesFolderUrlRelativeToClasspath()
+   * See #getLanguagesFolderUrlFromUserDirectory()
    */
   private static URL getLanguagesFolderUrl() {
     URL languagesFolderUrl = getLanguagesFolderUrlRelativeToClasspath();
     if( languagesFolderUrl!=null ) {
-    	Log.message("languages relative to classpath: "+languagesFolderUrl.toString());
+    	logger.info("languages relative to classpath: "+languagesFolderUrl.toString());
     }
     URL languageFolderUsingUserDirectory = getLanguagesFolderUrlFromUserDirectory();
     if( languageFolderUsingUserDirectory!=null ) {
-    	Log.message("languages via user directory: "+languageFolderUsingUserDirectory.toString());
+    	logger.info("languages via user directory: "+languageFolderUsingUserDirectory.toString());
     }
     if (languagesFolderUrl == null) {
       languagesFolderUrl = languageFolderUsingUserDirectory;
@@ -208,23 +203,23 @@ public final class MarginallyCleverTranslationXmlFileHelper {
 
   /**
    * @return url object representing the language folder in the user's working directory.
-   * @see com.marginallyclever.robotOverlord.Translator#WORKING_DIRECTORY
+   * See com.marginallyclever.robotoverlord.Translator#WORKING_DIRECTORY
    */
   private static URL getLanguagesFolderUrlFromUserDirectory() {
     URL languageFolderUsingUserDirectoryUrl = null;
     try {
-    	File f = new File(WORKING_DIRECTORY);
+    	File f = new File(Translator.LANGUAGES_DIRECTORY);
       languageFolderUsingUserDirectoryUrl = f.toURI().toURL();
     } catch (MalformedURLException e) {
-      Log.error( e.getMessage() );
+      logger.error( e.getMessage() );
     }
     return languageFolderUsingUserDirectoryUrl;
   }
 
   /**
    * @return url object representing languages folder relative to classpath.
-   * @see #LANGUAGES_FOLDER_LOCATION
-   * @see java.lang.ClassLoader#getResource(String)
+   * See #LANGUAGES_FOLDER_LOCATION
+   * See java.lang.ClassLoader#getResource(String)
    */
   public static URL getLanguagesFolderUrlRelativeToClasspath() {
     final ClassLoader thisClassesClassLoader = MarginallyCleverTranslationXmlFileHelper.class.getClassLoader();
@@ -234,8 +229,8 @@ public final class MarginallyCleverTranslationXmlFileHelper {
   /**
    * recursively logs the names and values of a given xml node
    * @param node xml node to recursively log
-   * @see <a href="http://stackoverflow.com/a/5511298">Java: Most efficient method to iterate over all elements in a org.w3c.dom.Document?</a>
-   * @see #logAllNodesNamesAndValues(org.w3c.dom.Node)
+   * See <a href="http://stackoverflow.com/a/5511298">Java: Most efficient method to iterate over all elements in a org.w3c.dom.Document?</a>
+   * See #logAllNodesNamesAndValues(org.w3c.dom.Node)
    */
   @SuppressWarnings("unused")
   private static void logAllNodesNamesAndValues(Node node) {
@@ -257,17 +252,17 @@ public final class MarginallyCleverTranslationXmlFileHelper {
   private static void logNodeNameAndValue(Node node) {
     final String nodeName = node.getNodeName();
     if (nodeName.equals("key")) {
-      Log.message("node name: "+nodeName+", node value: "+node.getTextContent());
+      logger.info("node name: "+nodeName+", node value: "+node.getTextContent());
     }
   }
 
   /**
    * gets a key set from a given xml node
    * @param node node to get all elements with the name {@code "key"}
-   * @see <a href="http://stackoverflow.com/a/5511298">Java: Most efficient method to iterate over all elements in a org.w3c.dom.Document?</a>
+   * See <a href="http://stackoverflow.com/a/5511298">Java: Most efficient method to iterate over all elements in a org.w3c.dom.Document?</a>
    */
   private static Set<String> getKeySet(Node node) {
-    final Set<String> keySet = new HashSet<>();
+    final Set<String> keySet = new HashSet<String>();
     if (node.getNodeName().equals("key")) {
       keySet.add(node.getTextContent());
     }
@@ -301,16 +296,16 @@ public final class MarginallyCleverTranslationXmlFileHelper {
   private static boolean doesThisLanguageFileContainAllTheDefaultKeys(Set<String> defaultLanguageFilesKeys, Set<String> thisLanguageFilesKeys, String thisLanguageFilesName) {
     final boolean doesThisLanguageFileContainAllTheDefaultKeys = thisLanguageFilesKeys.containsAll(defaultLanguageFilesKeys);
     if (!doesThisLanguageFileContainAllTheDefaultKeys) {
-      Log.error(thisLanguageFilesName+" does not contain all the default translation keys.");
+      logger.error(thisLanguageFilesName+" does not contain all the default translation keys.");
       Iterator<String> k = defaultLanguageFilesKeys.iterator();
       while(k.hasNext()) {
     	  String s = k.next();
     	  if(!thisLanguageFilesKeys.contains(s)) {
-    		  Log.error("missing " + s);
+            logger.error("missing " + s);
     	  }
       }
     } else {
-      Log.message(thisLanguageFilesName+" contains all the default translation keys.");
+      logger.info(thisLanguageFilesName+" contains all the default translation keys.");
     }
     return doesThisLanguageFileContainAllTheDefaultKeys;
   }
